@@ -1,0 +1,31 @@
+{
+  "name": "Custom Cup Order — 专属定制杯子",
+  "short_name": "CupMaker",
+  "description": "Customize and order personalized cups with carved text",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#F3F4F6",
+  "theme_color": "#2563EB",
+  "orientation": "portrait",
+  "scope": "./",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "categories": ["shopping", "lifestyle"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false,
+  "related_applications": []
+}

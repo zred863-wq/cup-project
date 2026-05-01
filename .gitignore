@@ -1,0 +1,6 @@
+node_modules/
+cup_orders.db
+*.log
+.env
+package-lock.json
+.DS_Store

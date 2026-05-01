@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cup Order Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ═══════ LOGIN SCREEN ═══════ -->
+  <div id="login-screen" class="screen">
+    <div class="login-box">
+      <h1>☕ Cup Admin</h1>
+      <p class="subtitle">Order Management System</p>
+      <form id="login-form">
+        <label>Username</label>
+        <input type="text" id="login-user" placeholder="Username" required autocomplete="username">
+        <label>Password</label>
+        <input type="password" id="login-pass" placeholder="Password" required autocomplete="current-password">
+        <p id="login-error" class="error-msg"></p>
+        <button type="submit" class="btn-primary">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════ DASHBOARD ═══════ -->
+  <div id="dashboard" class="screen hidden">
+    <header class="topbar">
+      <h1>☕ Cup Order Admin</h1>
+      <div class="topbar-right">
+        <span id="admin-username"></span>
+        <button id="btn-logout" class="btn-small">Logout</button>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="orders">Orders</button>
+      <button class="tab" data-tab="reports">Reports</button>
+      <button class="tab" data-tab="settings">Settings</button>
+    </nav>
+
+    <!-- ─────── ORDERS TAB ─────── -->
+    <section id="tab-orders" class="tab-content active">
+      <div class="orders-header">
+        <div class="order-filters">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="pending">Pending</button>
+          <button class="filter-btn" data-filter="completed">Done</button>
+          <button class="filter-btn" data-filter="cancelled">Cancelled</button>
+        </div>
+        <button id="btn-refresh" class="btn-small">↻ Refresh</button>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="summary-cards">
+        <div class="card pending-card">
+          <span class="card-label">Pending</span>
+          <span id="stat-pending" class="card-value">0</span>
+        </div>
+        <div class="card done-card">
+          <span class="card-label">Completed</span>
+          <span id="stat-completed" class="card-value">0</span>
+        </div>
+        <div class="card cancelled-card">
+          <span class="card-label">Cancelled</span>
+          <span id="stat-cancelled" class="card-value">0</span>
+        </div>
+        <div class="card total-card">
+          <span class="card-label">Total</span>
+          <span id="stat-total" class="card-value">0</span>
+        </div>
+      </div>
+
+      <!-- Live orders -->
+      <div class="order-section">
+        <h2>📋 Current Orders</h2>
+        <div id="order-list" class="order-list">
+          <p class="loading">Loading orders...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────── REPORTS TAB ─────── -->
+    <section id="tab-reports" class="tab-content hidden">
+      <div class="report-grid">
+        <!-- Daily Sales -->
+        <div class="report-card">
+          <h3>Today's Sales</h3>
+          <div id="daily-sales" class="report-body">
+            <p class="loading">Loading...</p>
+          </div>
+        </div>
+
+        <!-- Popular Cups -->
+        <div class="report-card">
+          <h3>Popular Cups</h3>
+          <div id="popular-cups" class="report-body">
+            <p class="loading">Loading...</p>
+          </div>
+        </div>
+
+        <!-- Peak Hours -->
+        <div class="report-card full-width">
+          <h3>Peak Hours</h3>
+          <div id="peak-hours" class="report-body">
+            <p class="loading">Loading...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────── SETTINGS TAB ─────── -->
+    <section id="tab-settings" class="tab-content hidden">
+      <div class="settings-card">
+        <h3>⚙️ System Settings</h3>
+        <p>Edit config.js on the server to change these values.</p>
+        <div id="current-config" class="config-display">
+          <p class="loading">Loading...</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ═══════ ORDER DETAIL MODAL ═══════ -->
+  <div id="order-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <h2>Order #<span id="modal-order-id"></span></h2>
+      <div id="modal-body"></div>
+      <div class="modal-actions">
+        <button id="modal-mark-done" class="btn-success">✓ Mark Done</button>
+        <button id="modal-cancel" class="btn-danger">✕ Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
