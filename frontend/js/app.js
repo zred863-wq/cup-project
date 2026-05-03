@@ -17,17 +17,19 @@ const CONFIG = {
   adminPassword: 'admin123',
 
   // Max chars
-  maxLatinChars: 15,
+  maxLatinChars: 25,
   maxChineseChars: 10,
 };
 
 // ==================== CUP TYPES (must match backend config) ====================
 const CUP_TYPES = [
-  { id: 'classic',  nameZh: '经典款', nameEn: 'Classic',  emoji: '☕', bg: '#E8E8E8',   textColor: '#333' },
-  { id: 'floral',   nameZh: '花卉款', nameEn: 'Floral',   emoji: '🌸', bg: '#FBB6CE',   textColor: '#333' },
-  { id: 'animal',   nameZh: '动物款', nameEn: 'Animal',   emoji: '🐾', bg: '#2D3748',   textColor: '#fff' },
-  { id: 'abstract', nameZh: '抽象款', nameEn: 'Abstract', emoji: '🎨', bg: '#1A365D',   textColor: '#fff' },
-  { id: 'minimal',  nameZh: '简约款', nameEn: 'Minimal',  emoji: '▪', bg: '#276749',   textColor: '#fff' },
+  // To replace a cup pattern image: just swap the PNG file in frontend/cups/
+  // Keep the same filename, or update the path below. See cups/README.md for details.
+  { id: 'classic',  nameZh: '经典款', nameEn: 'Classic',  emoji: '☕', bg: '#E8E8E8',   textColor: '#333', patternImage: 'cups/cup1.png' },
+  { id: 'floral',   nameZh: '花卉款', nameEn: 'Floral',   emoji: '🌸', bg: '#FBB6CE',   textColor: '#333', patternImage: 'cups/cup2.png' },
+  { id: 'animal',   nameZh: '动物款', nameEn: 'Animal',   emoji: '🐾', bg: '#2D3748',   textColor: '#fff', patternImage: 'cups/cup3.png' },
+  { id: 'abstract', nameZh: '抽象款', nameEn: 'Abstract', emoji: '🎨', bg: '#1A365D',   textColor: '#fff', patternImage: 'cups/cup4.png' },
+  { id: 'minimal',  nameZh: '简约款', nameEn: 'Minimal',  emoji: '▪', bg: '#276749',   textColor: '#fff', patternImage: 'cups/cup5.png' },
 ];
 
 // ==================== FONTS (must match backend config) ====================
@@ -47,8 +49,13 @@ const FONTS = [
   { id: 'bebas-neue',     label: 'Bebas Neue',         zhLabel: 'Bebas Neue',         googleFont: 'Bebas+Neue' },
 ];
 
-// ==================== TEXT EMOTICONS ====================
-const TEXT_EMOTICONS = [':)', ':(', ':o', 'XD', '^_^', '>_<', '<3', ':-)', ';-)', 'T_T', 'O_O', '*_*', '-_-', '+_+', 'zzZ', '>:)', 'D:', ':P', ':/', 'B)'];
+// ==================== KAOMOJI (Japanese-style emoticons) ====================
+const TEXT_EMOTICONS = [
+  '(◍•ᴗ•◍)', '( ᐛ )', '(╥﹏╥)', '•﹏•', 'ᐕ)⁾⁾',
+  '(◕‿◕)', '(｡•̀ᴗ-)✧', '(╯°□°）╯︵┻━┻', '(´；ω；｀)', '(≧∇≦)/',
+  '(눈_눈)', '(◔‿◔)', '(ʘᴗʘ✿)', '(个_个)', '(•̀ᴗ•́)و',
+  '(๑•̀ㅂ•́)و✧', '(づ｡◕‿‿◕｡)づ', '(ᗒᗣᗕ)՞', '(⑅˘͈ ᵕ ˘͈)', '(⁄ ⁄•⁄ω⁄•⁄ ⁄)'
+];
 
 // ==================== TRANSLATIONS ====================
 const T = {
@@ -71,10 +78,10 @@ const T = {
     selected: '已选',
 
     // Customize
-    textPlaceholder: '输入文字（最多15个字母或10个汉字）',
+    textPlaceholder: '输入文字（最多25个字母或10个汉字）',
     charCount: (current, max) => `${current} / ${max}`,
     fontLabel: '选择字体',
-    emojiLabel: '添加表情',
+    emojiLabel: '添加颜文字',
     previewLabel: '预览效果',
     nextStep: '下一步：支付',
 
@@ -164,10 +171,10 @@ const T = {
     tapToSelect: 'Tap to select',
     selected: 'Selected',
 
-    textPlaceholder: 'Enter text (max 15 letters or 10 Chinese characters)',
+    textPlaceholder: 'Enter text (max 25 letters or 10 Chinese characters)',
     charCount: (current, max) => `${current} / ${max}`,
     fontLabel: 'Choose Font',
-    emojiLabel: 'Add Emoji',
+    emojiLabel: 'Add Kaomoji',
     previewLabel: 'Preview',
     nextStep: 'Next: Payment',
 
@@ -254,6 +261,7 @@ const state = {
   adminToken: null,
   adminTab: 'pending',
   currentModal: null,
+  selectedEmoticon: null,  // single-select emoticon tracker
 };
 
 // ==================== INIT ====================
@@ -363,14 +371,10 @@ function renderCustomization() {
     <h2 class="screen-title">${t('customizeTitle')}</h2>
     <p class="screen-subtitle">${t('customizeSubtitle')}</p>
 
-    <!-- Preview (matches payment page style) -->
+    <!-- 3D Cup Preview -->
     <div class="payment-summary" style="margin-bottom: 16px;">
       <div class="payment-cup-preview">
-        <div class="preview-cup-shape" style="background: ${cup ? cup.bg : '#E8E8E8'}; width: 100px; height: 120px; border-radius: 16px 16px 30px 30px; margin: 0 auto 12px;">
-          <div class="preview-text" style="font-family: '${state.font}', 'Noto Sans SC', sans-serif; color: ${cup ? cup.textColor : '#333'};">
-            ${text || (state.lang === 'zh' ? '预览文字' : 'Preview Text')}
-          </div>
-        </div>
+        <div class="preview-cup-3d" id="cup-3d-preview"></div>
       </div>
       <div style="text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: -4px;">${t('previewLabel')}</div>
     </div>
@@ -384,10 +388,10 @@ function renderCustomization() {
       </div>
     </div>
 
-    <!-- Text Emoticon Picker -->
+    <!-- Text Emoticon Picker (single-select) -->
     <div class="emoji-row">
       <span style="font-size:0.9rem;color:var(--text-secondary);font-weight:600;min-width:80px;">${t('emojiLabel')}</span>
-      ${TEXT_EMOTICONS.map(e => `<button class="emoji-btn text-emoticon" data-emoji="${e}">${e}</button>`).join('')}
+      ${TEXT_EMOTICONS.map(e => `<button class="emoji-btn text-emoticon ${state.selectedEmoticon === e ? 'selected' : ''}" data-emoji="${e}">${e}</button>`).join('')}
     </div>
 
     <!-- Font Picker -->
@@ -408,6 +412,19 @@ function renderCustomization() {
     </button>
   `;
 
+  // Initialize 3D cup preview
+  var previewContainer = el.querySelector('#cup-3d-preview');
+  if (previewContainer) {
+    init3DCupPreview(previewContainer, {
+      bg: cup ? cup.bg : '#E8E8E8',
+      textColor: cup ? cup.textColor : '#333',
+      id: cup ? cup.id : '',
+      patternImage: cup ? cup.patternImage : null,
+      text: state.text,
+      font: state.font
+    });
+  }
+
   // Text input handling
   const textarea = el.querySelector('#custom-text');
   if (textarea) {
@@ -416,21 +433,50 @@ function renderCustomization() {
       updateCharCounter(textarea.value);
       renderCustomizationPreview();
     });
+    // Stop cup rotation while typing
+    textarea.addEventListener('focus', () => {
+      if (_active3DPreview && _active3DPreview.pauseRotation) {
+        _active3DPreview.pauseRotation();
+      }
+    });
+    textarea.addEventListener('blur', () => {
+      if (_active3DPreview && _active3DPreview.resumeRotation) {
+        _active3DPreview.resumeRotation();
+      }
+    });
   }
 
-  // Text emoticon buttons
+  // Text emoticon buttons — single-select mode
   el.querySelectorAll('.emoji-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      const emoji = btn.dataset.emoji;
       const textarea = document.getElementById('custom-text');
-      if (textarea) {
+      if (!textarea) return;
+
+      if (state.selectedEmoticon === emoji) {
+        // Toggle off: deselect and remove emoticon from text
+        state.selectedEmoticon = null;
+        state.text = state.text.replace(emoji, '');
+        textarea.value = state.text;
+        renderCustomization();
+        updateCharCounter(state.text);
+        renderCustomizationPreview();
+      } else {
+        // Select new emoticon: remove old one first, then insert new one
+        if (state.selectedEmoticon) {
+          state.text = state.text.replace(state.selectedEmoticon, '');
+        }
+        state.selectedEmoticon = emoji;
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        const newText = textarea.value.substring(0, start) + btn.dataset.emoji + textarea.value.substring(end);
-        textarea.value = newText;
+        const baseText = state.text;
+        const newText = baseText.substring(0, start) + emoji + baseText.substring(end);
         state.text = newText;
-        textarea.selectionStart = textarea.selectionEnd = start + btn.dataset.emoji.length;
+        textarea.value = newText;
+        textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
         textarea.focus();
         updateCharCounter(newText);
+        renderCustomization();
         renderCustomizationPreview();
       }
     });
@@ -474,16 +520,22 @@ function updateCharCounter(text) {
 
 function renderCustomizationPreview() {
   const cup = CUP_TYPES.find(c => c.id === state.cupType);
-  const textEl = document.querySelector('.payment-summary .preview-text');
-  if (textEl) {
-    textEl.textContent = state.text || (state.lang === 'zh' ? '预览文字' : 'Preview Text');
-    textEl.style.fontFamily = `'${state.font}', 'Noto Sans SC', sans-serif`;
-    if (cup) textEl.style.color = cup.textColor;
-    textEl.style.fontSize = getAutoFontSize(state.text);
+
+  // Update 3D preview if active
+  if (_active3DPreview && _active3DPreview.update) {
+    _active3DPreview.update(state.text, state.font, cup);
   }
-  const cupShape = document.querySelector('.payment-summary .preview-cup-shape');
-  if (cupShape && cup) {
-    cupShape.style.background = cup.bg;
+
+  // Fallback: update text in CSS preview (if Three.js not loaded)
+  if (!THREE_AVAILABLE) {
+    var fallbackEl = document.querySelector('.preview-cup-shape-fallback');
+    if (fallbackEl && cup) fallbackEl.style.background = cup.bg;
+    var fallbackSpan = document.querySelector('.preview-cup-shape-fallback span');
+    if (fallbackSpan) {
+      fallbackSpan.textContent = state.text || (state.lang === 'zh' ? '预览文字' : 'Preview Text');
+      fallbackSpan.style.fontFamily = "'" + state.font + "', 'Noto Sans SC', sans-serif";
+      if (cup) fallbackSpan.style.color = cup.textColor;
+    }
   }
 }
 
@@ -500,11 +552,7 @@ function renderPayment() {
     <!-- Summary -->
     <div class="payment-summary">
       <div class="payment-cup-preview">
-        <div class="preview-cup-shape" style="background: ${cup ? cup.bg : '#E8E8E8'}; width: 100px; height: 120px; border-radius: 16px 16px 30px 30px; margin: 0 auto 12px;">
-          <div class="preview-text" style="font-family: '${state.font}', 'Noto Sans SC', sans-serif; color: ${cup ? cup.textColor : '#333'}; font-size: 0.9rem;">
-            ${state.text}
-          </div>
-        </div>
+        <div class="preview-cup-3d" id="cup-3d-preview"></div>
       </div>
       <hr class="payment-divider">
       <div class="payment-price-row">
@@ -536,6 +584,19 @@ function renderPayment() {
       ${t('iHavePaid')} ✓
     </button>
   `;
+
+  // Initialize 3D cup preview
+  var previewContainer = el.querySelector('#cup-3d-preview');
+  if (previewContainer) {
+    init3DCupPreview(previewContainer, {
+      bg: cup ? cup.bg : '#E8E8E8',
+      textColor: cup ? cup.textColor : '#333',
+      id: cup ? cup.id : '',
+      patternImage: cup ? cup.patternImage : null,
+      text: state.text,
+      font: state.font
+    });
+  }
 
   // QR button handlers
   el.querySelector('#qr-alipay').addEventListener('click', () => {
@@ -732,6 +793,7 @@ function showScreen(name) {
 function resetOrder() {
   state.cupType = null;
   state.text = '';
+  state.selectedEmoticon = null;
   // Keep font selection
   renderCupSelection();
 }
@@ -750,6 +812,389 @@ function toggleLanguage() {
   render();
 }
 
+// ==================== 3D CUP PREVIEW (Three.js) ====================
+const THREE_AVAILABLE = typeof THREE !== 'undefined';
+let _active3DPreview = null; // { update, dispose, container }
+
+/**
+ * Initialize a 3D cup preview inside the given container element.
+ * @param {HTMLElement} container
+ * @param {Object} cupConfig - { bg, textColor, id, patternImage, text, font }
+ * @returns {{ update: Function(text, font, cupConfig), dispose: Function }}
+ */
+function init3DCupPreview(container, cupConfig) {
+  // Dispose previous instance if exists
+  if (_active3DPreview && _active3DPreview.dispose) {
+    _active3DPreview.dispose();
+    _active3DPreview = null;
+  }
+
+  // Graceful degradation: fall back to CSS preview
+  if (!THREE_AVAILABLE) {
+    container.innerHTML = `
+      <div class="preview-cup-shape-fallback" style="background:${cupConfig.bg};">
+        <span style="color:${cupConfig.textColor};font-family:'${cupConfig.font || 'noto-sans-sc'}','Noto Sans SC',sans-serif;">${cupConfig.text || 'PREVIEW'}</span>
+      </div>`;
+    const fallbackUpdate = function(text, font, cfg) {
+      const el = container.querySelector('.preview-cup-shape-fallback');
+      const span = container.querySelector('span');
+      if (el && cfg) el.style.background = cfg.bg;
+      if (span) {
+        span.textContent = text || 'PREVIEW';
+        if (cfg) span.style.color = cfg.textColor;
+        if (font) span.style.fontFamily = `'${font}','Noto Sans SC',sans-serif`;
+      }
+    };
+    _active3DPreview = { update: fallbackUpdate, dispose: function() { container.innerHTML = ''; }, container };
+    return _active3DPreview;
+  }
+
+  // --- Dimensions ---
+  const width = container.clientWidth || 280;
+  const height = container.clientHeight || 260;
+
+  // --- Renderer ---
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+  renderer.domElement.style.display = 'block';
+  renderer.domElement.style.width = '100%';
+  renderer.domElement.style.height = '100%';
+  container.appendChild(renderer.domElement);
+
+  // --- Scene ---
+  const scene = new THREE.Scene();
+
+  // --- Camera ---
+  const camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 100);
+  camera.position.set(0, 0.6, 6.5);
+  camera.lookAt(0, 0, 0);
+
+  // --- Lights ---
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  keyLight.position.set(2, 1.5, 4);
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  fillLight.position.set(-2, 0, 3);
+  scene.add(fillLight);
+
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.35);
+  rimLight.position.set(3, -0.5, -3);
+  scene.add(rimLight);
+
+  // --- Cup Group (rotated as one) ---
+  const cupGroup = new THREE.Group();
+  cupGroup.rotation.y = 0.3; // Start at a nice angle
+  scene.add(cupGroup);
+
+  // --- Canvas Texture for Cup Side ---
+  const texCanvas = document.createElement('canvas');
+  texCanvas.width = 512;
+  texCanvas.height = 256;
+  const texCtx = texCanvas.getContext('2d');
+
+  const texture = new THREE.CanvasTexture(texCanvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+
+  let _patternImg = null;
+  let _patternLoaded = false;
+
+  function drawTexture(text, fontId, bg, textColor, patternSrc) {
+    const ctx = texCtx;
+    const w = texCanvas.width;
+    const h = texCanvas.height;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Background
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+
+    // Subtle shading gradient for depth illusion
+    const shadeGrad = ctx.createLinearGradient(0, 0, w, 0);
+    shadeGrad.addColorStop(0, 'rgba(0,0,0,0.18)');
+    shadeGrad.addColorStop(0.25, 'rgba(0,0,0,0.03)');
+    shadeGrad.addColorStop(0.5, 'rgba(255,255,255,0.06)');
+    shadeGrad.addColorStop(0.75, 'rgba(0,0,0,0.03)');
+    shadeGrad.addColorStop(1, 'rgba(0,0,0,0.18)');
+    ctx.fillStyle = shadeGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Horizontal decorative line near top and bottom
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(40, 30);
+    ctx.lineTo(w - 40, 30);
+    ctx.moveTo(40, h - 30);
+    ctx.lineTo(w - 40, h - 30);
+    ctx.stroke();
+
+    // Pattern image
+    if (_patternLoaded && _patternImg) {
+      ctx.globalAlpha = 0.35;
+      ctx.drawImage(_patternImg, 0, 0, w, h);
+      ctx.globalAlpha = 1.0;
+    }
+
+    // Text
+    const displayText = text || 'PREVIEW';
+    const fontSize = get3DTextFontSize(displayText);
+    const fontFamily = fontId ? `'${fontId}', 'Noto Sans SC', sans-serif` : "'Noto Sans SC', sans-serif";
+    ctx.font = `bold ${fontSize}px ${fontFamily}`;
+    ctx.fillStyle = textColor;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(displayText, w / 2, h / 2);
+
+    texture.needsUpdate = true;
+  }
+
+  // Preload pattern image
+  if (cupConfig.patternImage) {
+    _patternImg = new Image();
+    _patternImg.crossOrigin = 'anonymous';
+    _patternImg.onload = function() {
+      _patternLoaded = true;
+      drawTexture(cupConfig.text || '', cupConfig.font || 'noto-sans-sc', cupConfig.bg, cupConfig.textColor, cupConfig.patternImage);
+    };
+    _patternImg.onerror = function() {
+      _patternLoaded = false;
+    };
+    _patternImg.src = cupConfig.patternImage;
+  }
+
+  // --- Cup Body (tapered cylinder: top slightly wider than bottom) ---
+  const bodyGeom = new THREE.CylinderGeometry(1.08, 0.88, 2.4, 48);
+
+  const bodyTopMat = new THREE.MeshStandardMaterial({
+    color: cupConfig.bg,
+    roughness: 0.35,
+    metalness: 0.05,
+  });
+  const bodyBottomMat = new THREE.MeshStandardMaterial({
+    color: cupConfig.bg,
+    roughness: 0.35,
+    metalness: 0.05,
+  });
+  const bodySideMat = new THREE.MeshStandardMaterial({
+    map: texture,
+    roughness: 0.4,
+    metalness: 0.05,
+  });
+
+  const bodyMesh = new THREE.Mesh(bodyGeom, [bodySideMat, bodyTopMat, bodyBottomMat]);
+  cupGroup.add(bodyMesh);
+
+  // --- Handle (curved half-torus on the right side) ---
+  const handleGeom = new THREE.TorusGeometry(0.42, 0.07, 12, 20, Math.PI * 0.78);
+  const handleMat = new THREE.MeshStandardMaterial({
+    color: cupConfig.bg,
+    roughness: 0.3,
+    metalness: 0.1,
+  });
+  const handleMesh = new THREE.Mesh(handleGeom, handleMat);
+  handleMesh.position.set(1.05, 0.25, 0);
+  handleMesh.rotation.z = 0.35;
+  handleMesh.rotation.y = 0.15;
+  cupGroup.add(handleMesh);
+
+  // Reflected handle on the opposite side (smaller)
+  const handleGeom2 = new THREE.TorusGeometry(0.42, 0.07, 12, 20, Math.PI * 0.78);
+  const handleMesh2 = new THREE.Mesh(handleGeom2, handleMat);
+  handleMesh2.position.set(-1.05, 0.25, 0);
+  handleMesh2.rotation.z = -0.35 + Math.PI;
+  handleMesh2.rotation.y = 0.15;
+  cupGroup.add(handleMesh2);
+
+  // --- Base ring ---
+  const baseGeom = new THREE.CylinderGeometry(0.9, 0.92, 0.14, 32);
+  const baseMat = new THREE.MeshStandardMaterial({
+    color: cupConfig.bg,
+    roughness: 0.25,
+    metalness: 0.15,
+  });
+  const baseMesh = new THREE.Mesh(baseGeom, baseMat);
+  baseMesh.position.y = -1.27;
+  cupGroup.add(baseMesh);
+
+  // --- Initial texture draw ---
+  drawTexture(cupConfig.text || '', cupConfig.font || 'noto-sans-sc', cupConfig.bg, cupConfig.textColor, cupConfig.patternImage);
+
+  // --- Interaction state ---
+  let autoRotate = true;
+  let _savedAutoRotate = true;  // remember state before typing pause
+  const rotationSpeed = 0.35;
+  let isDragging = false;
+  let prevMouse = { x: 0, y: 0 };
+  let dragVelocity = 0;
+  const dragDecay = 0.94;
+  let lastTime = performance.now();
+  let animId = null;
+  let _dragResumeTimer = null;
+
+  // --- Mouse/touch interaction ---
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('pointerdown', function(e) {
+    isDragging = true;
+    autoRotate = false;
+    prevMouse.x = e.clientX;
+    prevMouse.y = e.clientY;
+    dragVelocity = 0;
+  });
+
+  window.addEventListener('pointermove', function(e) {
+    if (!isDragging) return;
+    const dx = e.clientX - prevMouse.x;
+    dragVelocity = dx * 0.006;
+    cupGroup.rotation.y += dx * 0.006;
+    prevMouse.x = e.clientX;
+    prevMouse.y = e.clientY;
+  });
+
+  window.addEventListener('pointerup', function() {
+    if (isDragging) {
+      isDragging = false;
+      if (_dragResumeTimer) clearTimeout(_dragResumeTimer);
+      _dragResumeTimer = setTimeout(function() {
+        if (!isDragging) autoRotate = true;
+        _dragResumeTimer = null;
+      }, 2000);
+    }
+  });
+
+  // Prevent page scroll on touch devices when interacting with cup
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+  }, { passive: false });
+
+  // --- Pause / resume rotation (used when typing) ---
+  function pauseRotation() {
+    _savedAutoRotate = autoRotate;
+    autoRotate = false;
+  }
+  function resumeRotation() {
+    autoRotate = _savedAutoRotate;
+  }
+
+  // --- Animation loop ---
+  function animate(timestamp) {
+    animId = requestAnimationFrame(animate);
+
+    const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
+    lastTime = timestamp;
+
+    if (autoRotate) {
+      cupGroup.rotation.y += rotationSpeed * dt;
+    } else if (!isDragging && Math.abs(dragVelocity) > 0.0001) {
+      cupGroup.rotation.y += dragVelocity;
+      dragVelocity *= dragDecay;
+    }
+
+    renderer.render(scene, camera);
+  }
+
+  // --- Resize handler ---
+  function handleResize() {
+    const w = container.clientWidth || 280;
+    const h = container.clientHeight || 260;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+
+  window.addEventListener('resize', handleResize);
+
+  // --- Update function ---
+  function update(text, font, newCupConfig) {
+    if (!THREE_AVAILABLE) {
+      // Delegate to fallback (handled by _active3DPreview.update)
+      if (_active3DPreview && _active3DPreview.update && _active3DPreview !== instance) {
+        _active3DPreview.update(text, font, newCupConfig);
+      }
+      return;
+    }
+
+    const cfg = newCupConfig || cupConfig;
+    const bg = cfg.bg;
+    const textColor = cfg.textColor;
+    const patternImage = cfg.patternImage;
+
+    // Update materials colors
+    bodyTopMat.color.set(bg);
+    bodyBottomMat.color.set(bg);
+    handleMat.color.set(bg);
+    baseMat.color.set(bg);
+
+    // Load new pattern if changed
+    if (newCupConfig && newCupConfig.patternImage !== cupConfig.patternImage) {
+      _patternLoaded = false;
+      if (newCupConfig.patternImage) {
+        _patternImg = new Image();
+        _patternImg.crossOrigin = 'anonymous';
+        _patternImg.onload = function() {
+          _patternLoaded = true;
+          drawTexture(text || '', font || 'noto-sans-sc', bg, textColor, patternImage);
+        };
+        _patternImg.onerror = function() { _patternLoaded = false; };
+        _patternImg.src = newCupConfig.patternImage;
+      }
+    }
+
+    drawTexture(text || '', font || 'noto-sans-sc', bg, textColor, patternImage);
+
+    if (newCupConfig) cupConfig = newCupConfig;
+  }
+
+  // --- Dispose function ---
+  function dispose() {
+    window.removeEventListener('resize', handleResize);
+    if (_dragResumeTimer) clearTimeout(_dragResumeTimer);
+    if (animId) cancelAnimationFrame(animId);
+    renderer.dispose();
+    bodyGeom.dispose();
+    handleGeom.dispose();
+    handleGeom2.dispose();
+    baseGeom.dispose();
+    bodyTopMat.dispose();
+    bodyBottomMat.dispose();
+    bodySideMat.dispose();
+    handleMat.dispose();
+    baseMat.dispose();
+    texture.dispose();
+    if (renderer.domElement && renderer.domElement.parentNode) {
+      renderer.domElement.parentNode.removeChild(renderer.domElement);
+    }
+  }
+
+  // Start animation
+  animId = requestAnimationFrame(animate);
+  lastTime = performance.now();
+
+  var instance = { update: update, dispose: dispose, container: container, pauseRotation: pauseRotation, resumeRotation: resumeRotation };
+  _active3DPreview = instance;
+
+  return instance;
+}
+
+function get3DTextFontSize(text) {
+  var len = (text || '').length;
+  if (len === 0) return 48;
+  if (len <= 5) return 48;
+  if (len <= 10) return 38;
+  if (len <= 15) return 30;
+  if (len <= 20) return 24;
+  if (len <= 25) return 18;
+  return 16;
+}
+
 // ==================== HELPERS ====================
 function isChinese(text) {
   return /[\u4e00-\u9fff]/.test(text);
@@ -758,14 +1203,13 @@ function isChinese(text) {
 // Auto-adjust font size based on text length to fill the cup slot
 function getAutoFontSize(text) {
   const len = text.length;
-  if (!text || len === 0) return '1.8rem';
-  if (len <= 2) return '2.2rem';
-  if (len <= 4) return '1.8rem';
-  if (len <= 6) return '1.5rem';
-  if (len <= 10) return '1.2rem';
-  if (len <= 15) return '1.0rem';
-  if (len <= 20) return '0.85rem';
-  return '0.75rem';
+  if (!text || len === 0) return '2rem';
+  if (len <= 5) return '2rem';
+  if (len <= 10) return '1.5rem';
+  if (len <= 15) return '1.2rem';
+  if (len <= 20) return '1rem';
+  if (len <= 25) return '0.8rem';
+  return '0.7rem';
 }
 
 function saveOrders() {
