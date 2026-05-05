@@ -5,7 +5,7 @@
 // ==================== CONFIGURATION ====================
 const CONFIG = {
   // API — change this to your backend URL
-  apiBaseUrl: 'http://localhost:3000/api',
+  apiBaseUrl: '/api',
 
   // Flat price per cup (configurable in admin)
   defaultPrice: 29.90,

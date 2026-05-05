@@ -65,6 +65,9 @@ app.use(cors({
 // Body parsing
 app.use(express.json());
 
+// Serve frontend static files at root
+app.use(express.static(path.join(__dirname, "public")));
+
 // Request logging
 app.use((req, res, next) => {
   const start = Date.now();
